@@ -1,5 +1,8 @@
 #include "tape.hpp"
+#include "config.hpp"
+#include <chrono>
 #include <string>
+#include <thread>
 Tape::Tape(const std::string &filename) : filename(filename) { load(); }
 
 Tape::~Tape() { save(); }
@@ -27,6 +30,8 @@ void Tape::save() {
 
 bool Tape::read(int &value) {
   if (head < buffer.size()) {
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(global_config.tape_read_delay));
     value = buffer[head];
     return true;
   }
@@ -35,8 +40,12 @@ bool Tape::read(int &value) {
 
 bool Tape::write(int value) {
   if (head < buffer.size()) {
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(global_config.tape_write_delay));
     buffer[head] = value;
   } else {
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(global_config.tape_write_delay));
     buffer.push_back(value);
   }
   return true;
@@ -44,6 +53,8 @@ bool Tape::write(int value) {
 
 bool Tape::move_forward() {
   if (head + 1 <= buffer.size()) {
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(global_config.tape_move_delay));
     ++head;
     return true;
   }
@@ -53,6 +64,8 @@ bool Tape::move_forward() {
 bool Tape::move_backward() {
   if (head == 0)
     return false;
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(global_config.tape_move_delay));
   --head;
   return true;
 }

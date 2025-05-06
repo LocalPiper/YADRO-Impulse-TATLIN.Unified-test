@@ -1,4 +1,5 @@
 #include "k_way.hpp"
+#include "config.hpp"
 #include "tape.hpp"
 #include <algorithm>
 #include <cstddef>
@@ -52,14 +53,13 @@ void merge_runs_batch(const std::vector<std::string> &batch,
   output.close();
 }
 
-void k_way_merge(const std::vector<std::string> &run_files, Tape &output,
-                 size_t mem_limit, const std::string &tmp_dir) {
+void k_way_merge(const std::vector<std::string> &run_files, Tape &output) {
   namespace fs = std::filesystem;
-  fs::create_directory(tmp_dir);
+  fs::create_directory(global_config.tmp_dir);
   std::vector<std::string> curr_runs = run_files;
 
   size_t pass = 0;
-  const size_t max_merge = mem_limit - 1;
+  const size_t max_merge = global_config.ram_limit - 1;
   while (curr_runs.size() > max_merge) {
     std::vector<std::string> next_pass_runs;
 
@@ -69,8 +69,8 @@ void k_way_merge(const std::vector<std::string> &run_files, Tape &output,
           curr_runs.begin() + std::min(i + max_merge, curr_runs.size()));
 
       std::ostringstream name;
-      name << tmp_dir << "/pass" << pass << "_merged" << (i / max_merge)
-           << ".txt";
+      name << global_config.tmp_dir << "/pass" << pass << "_merged"
+           << (i / max_merge) << ".txt";
       merge_runs_batch(batch, name.str());
 
       next_pass_runs.push_back(name.str());
@@ -80,8 +80,8 @@ void k_way_merge(const std::vector<std::string> &run_files, Tape &output,
     pass++;
   }
 
-  merge_runs_batch(curr_runs, tmp_dir + "/final_output.tmp");
-  Tape input(tmp_dir + "/final_output.tmp");
+  merge_runs_batch(curr_runs, global_config.tmp_dir + "/final_output.tmp");
+  Tape input(global_config.tmp_dir + "/final_output.tmp");
 
   input.rewind();
   output.rewind();
