@@ -2,7 +2,10 @@
 #include "tape.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <cstdio>
 #include <filesystem>
+#include <iostream>
+#include <memory>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -16,17 +19,17 @@ struct HeapNode {
 
 void merge_runs_batch(const std::vector<std::string> &batch,
                       const std::string &output_file) {
-  std::vector<Tape> tapes;
+  std::vector<std::unique_ptr<Tape>> tapes;
   for (const auto &f : batch)
-    tapes.emplace_back(f);
+    tapes.emplace_back(std::make_unique<Tape>(f));
   std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<>> heap;
 
-  for (int i = 0; i < tapes.size(); ++i) {
+  for (int i = 0; i < (int)tapes.size(); ++i) {
     int val;
-    tapes[i].rewind();
-    if (tapes[i].read(val)) {
+    tapes[i]->rewind();
+    if (tapes[i]->read(val)) {
       heap.push({val, i});
-      tapes[i].move_forward();
+      tapes[i]->move_forward();
     }
   }
 
@@ -40,15 +43,13 @@ void merge_runs_batch(const std::vector<std::string> &batch,
     output.move_forward();
 
     int next;
-    if (tapes[idx].read(next)) {
+    if (tapes[idx]->read(next)) {
       heap.push({next, idx});
-      tapes[idx].move_forward();
+      tapes[idx]->move_forward();
     }
   }
 
   output.close();
-  for (auto &t : tapes)
-    t.close();
 }
 
 void k_way_merge(const std::vector<std::string> &run_files, Tape &output,
@@ -79,8 +80,8 @@ void k_way_merge(const std::vector<std::string> &run_files, Tape &output,
     pass++;
   }
 
-  merge_runs_batch(curr_runs, "final_output.tmp");
-  Tape input("final_output.txt");
+  merge_runs_batch(curr_runs, tmp_dir + "/final_output.tmp");
+  Tape input(tmp_dir + "/final_output.tmp");
 
   input.rewind();
   output.rewind();
