@@ -1,4 +1,3 @@
-
 #include "tape.hpp"
 #include <string>
 Tape::Tape(const std::string &filename) : filename(filename) { load(); }
