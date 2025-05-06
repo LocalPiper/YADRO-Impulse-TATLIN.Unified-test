@@ -21,7 +21,7 @@ void generate_sorted_runs(Tape &input, const std::string &tmp_dir,
   while (input.read(value)) {
     buffer.push_back(value);
     input.move_forward();
-    if (buffer.size() >= mem_limit) {
+    if (buffer.size() == mem_limit) {
       std::sort(buffer.begin(), buffer.end());
 
       std::ostringstream run_file_name;
